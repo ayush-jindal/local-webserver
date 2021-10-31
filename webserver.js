@@ -6,13 +6,21 @@ const { spawn } = require('child_process');
 const PORT = process.env.PORT || 3000;
 const DEVIP = '192.168.1.6';
 const PYTHONPATH = '/home/jindal/Py39/bin/python';
+const CONTENTPATH = '/home/jindal/Downloads/nobackup/';
+
+const MIMETypes = {
+    'pdf': 'application/pdf',
+    'epub': 'application/epub+zip',
+    'zip': 'application/zip'
+};
 
 const getURLObj = function (req) {
     return new URL(req.url, `http://${req.headers.host}/`);
 }
 
-const readFromFile = (res, path, headers) => {
-    fs.readFile(__dirname + path, (err, data) => {
+const readFromFile = (res, path, headers, absPath) => {
+    console.log((absPath ? '' : __dirname) + path);
+    fs.readFile((absPath ? '' : __dirname) + path, (err, data) => {
         if (err) {
             res.writeHead(404, {
                 'Content-Type': 'text/html'
@@ -53,19 +61,30 @@ const server = http.createServer((req, res) => {
         }
     } else if (path === '/list') {
         let body = '';
-        const proc = spawn(PYTHONPATH, ['getFileList.py', urlObj.searchParams.get('list')]);
-        proc.stdout.on('data', data => { body += data.toString();})
-        proc.stderr.on('data', data => { 
+        const params = ['getFileList.py', urlObj.searchParams.get('list')]
+        if(urlObj.searchParams.get('path'))
+            params.push(urlObj.searchParams.get('path'));
+        const proc = spawn(PYTHONPATH, params);
+        proc.stdout.on('data', data => { body += data.toString(); })
+        proc.stderr.on('data', data => {
             console.log(data.toString());
             res.writeHead(404, {
                 'Content-Type': 'text/html'
             })
             return res.end('File not found');
         })
-        proc.on('exit', () => { 
-            res.writeHead(200, {'Content-Type': 'application/json'});
+        proc.on('exit', () => {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(body);
         })
+    } else if (path === '/book-download') {
+        if (urlObj.searchParams.get('type') === 'file') {
+            const fileName = urlObj.searchParams.get('file');
+            const ext = fileName.split('.').at(-1);
+            readFromFile(res, CONTENTPATH + `books${urlObj.searchParams.get('path')}${fileName}`, {
+                'Content-type': MIMETypes[ext]
+            }, true);
+        }
     } else {
         res.statusCode = 404;
         res.end(`${path} not found`)
