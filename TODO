@@ -1,0 +1,6 @@
+1) on clicking expand multiple times, multiple requests sent and processed
+2) collapse the expanded dir
+3) should i hide the rows on collapsing or create a new request each time
+    with the second method, file list always upto date
+    might also be possible to alternate between request and hide after certain
+        time interval

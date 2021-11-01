@@ -9,10 +9,18 @@ const PYTHONPATH = '/home/jindal/Py39/bin/python';
 const CONTENTPATH = '/home/jindal/Downloads/nobackup/';
 
 const MIMETypes = {
+    'js': 'text/javascript',
     'pdf': 'application/pdf',
     'epub': 'application/epub+zip',
-    'zip': 'application/zip'
+    'zip': 'application/zip',
+    'ts': 'video/mp2t',
+    'mp3': 'audio/mpeg',
+    'png': 'image/png',
 };
+
+const getContentType = name => {
+    return MIMETypes[name.split('.').at(-1)];
+}
 
 const getURLObj = function (req) {
     return new URL(req.url, `http://${req.headers.host}/`);
@@ -50,7 +58,6 @@ const server = http.createServer((req, res) => {
         const headers = {
             'Content-Type': 'application/javascript'
         };
-        console.log(path, filename)
         switch (filename) {
             case 'script':
                 readFromFile(res, '/public/script.js', headers);
@@ -77,15 +84,19 @@ const server = http.createServer((req, res) => {
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(body);
         })
-    } else if (path === '/book-download') {
+    } else if (path === '/download') {
         if (urlObj.searchParams.get('type') === 'file') {
             const fileName = urlObj.searchParams.get('file');
-            const ext = fileName.split('.').at(-1);
-            readFromFile(res, CONTENTPATH + `books${urlObj.searchParams.get('path')}${fileName}`, {
-                'Content-type': MIMETypes[ext]
+            readFromFile(res, CONTENTPATH + `${urlObj.searchParams.get('category')}${urlObj.searchParams.get('path')}${fileName}`, {
+                'Content-type': getContentType(fileName)
             }, true);
         }
-    } else {
+    } else if (path === '/images'){
+        const fileName = urlObj.searchParams.get('img');
+        readFromFile(res, `/public/images/${fileName}`, {
+            'Content-Type': getContentType(fileName)
+        });
+    }else {
         res.statusCode = 404;
         res.end(`${path} not found`)
     }

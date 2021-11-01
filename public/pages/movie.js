@@ -1,5 +1,7 @@
-document.addEventListener('loadstart', e => {
+import { startRequest } from './../script.js'
+
+window.addEventListener('load', e => {
     const headers = {};
-    const request = new Request('192.168.1.6:3000/list/books', {method: 'GET', headers});
-    fetch(request).then(resp => {console.log(resp);})
+    const request = new Request('/list?list=movies', { method: 'GET', headers });
+    startRequest('movies', request, document.querySelector('.table-div > table tbody'), 'beforeend', '/');
 })
