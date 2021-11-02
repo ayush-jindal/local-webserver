@@ -2,6 +2,7 @@ const http = require('http')
 const fs = require('fs')
 const { URL } = require('url')
 const { spawn } = require('child_process');
+const { url } = require('inspector');
 
 const PORT = process.env.PORT || 3000;
 const DEVIP = '192.168.1.6';
@@ -42,9 +43,21 @@ const readFromFile = (res, path, headers, absPath) => {
 
 const server = http.createServer((req, res) => {
     const urlObj = getURLObj(req);
-    console.log(urlObj);
+    // console.log(urlObj);
     const path = urlObj.pathname
-    if (path === '/') {
+    if (req.method == 'POST') {
+        console.log(req.file);
+        let body = ''
+        req.on('data', data => {
+            body += data
+        })
+        req.on('end', function () {
+            // console.log(req);
+            console.log('Body: ' + body)
+            res.writeHead(200, { 'Content-Type': 'text/html' })
+            res.end('post received')
+        })
+    } else if (path === '/') {
         readFromFile(res, '/public/index.html', {
             'Content-Type': 'text/html'
         })
@@ -66,10 +79,14 @@ const server = http.createServer((req, res) => {
                 readFromFile(res, '/public/pages' + path, headers);
                 break;
         }
+    } else if (path.split('.').at(-1) === 'css') {
+        readFromFile(res, '/public/style.css', {
+            'Content-Type': 'text/css'
+        });
     } else if (path === '/list') {
         let body = '';
         const params = ['getFileList.py', urlObj.searchParams.get('list')]
-        if(urlObj.searchParams.get('path'))
+        if (urlObj.searchParams.get('path'))
             params.push(urlObj.searchParams.get('path'));
         const proc = spawn(PYTHONPATH, params);
         proc.stdout.on('data', data => { body += data.toString(); })
@@ -91,12 +108,13 @@ const server = http.createServer((req, res) => {
                 'Content-type': getContentType(fileName)
             }, true);
         }
-    } else if (path === '/images'){
+    } else if (path === '/images') {
         const fileName = urlObj.searchParams.get('img');
         readFromFile(res, `/public/images/${fileName}`, {
             'Content-Type': getContentType(fileName)
         });
-    }else {
+    } else if (path === '/upload') {
+    } else {
         res.statusCode = 404;
         res.end(`${path} not found`)
     }

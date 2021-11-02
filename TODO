@@ -1,6 +1,8 @@
 1) on clicking expand multiple times, multiple requests sent and processed
-2) collapse the expanded dir
+(done) 2) collapse the expanded dir
 3) should i hide the rows on collapsing or create a new request each time
     with the second method, file list always upto date
     might also be possible to alternate between request and hide after certain
         time interval
+4) upload request for multiple files and also creating folders
+5) maybe child chaining in classlist happening if same dir opened multiple times
